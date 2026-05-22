@@ -31,7 +31,7 @@ import { useSetState } from 'ahooks'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 type ReadLaterItem = SelectUserReadLaterItem
 type Status = ReadLaterItem['status']
@@ -67,8 +67,7 @@ function getFaviconUrl(host: string) {
 }
 
 export default function ClientPage(props: ClientPageProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [isCreating, setIsCreating] = useState(false)
+  const [inputUrl, setInputUrl] = useState('')
   const [activeStatus, setActiveStatus] = useState<Status>('unread')
   const [searchKeyword, setSearchKeyword] = useState('')
   const [state, setState] = useSetState({
@@ -94,42 +93,29 @@ export default function ClientPage(props: ClientPageProps) {
   )
 
   async function handleCreate() {
-    if (isCreating) return
-    setIsCreating(true)
-    try {
-      const nextUrl = inputRef.current?.value.trim()
-      if (!nextUrl) return
-      const res = await runAction(actCreateReadLaterItem({ url: nextUrl }), {
-        onOk: (data) => {
-          const okMsg =
-            data.mode === 'ai'
-              ? '已加入稍后阅读，并生成文章摘要'
-              : data.mode === 'html'
-                ? '已加入稍后阅读，已从网页提取标题和摘要'
-                : '已加入稍后阅读，暂未获取到网页内容'
-          addToast({
-            color: 'success',
-            title: '操作成功',
-            description: okMsg,
-          })
-        },
-      })
-      if (!res.ok) return
-      setState((prev) => ({
-        unreadItems: [res.data.item, ...prev.unreadItems],
-      }))
-      if (inputRef.current) {
-        inputRef.current.value = ''
-      }
-      setActiveStatus('unread')
-    } finally {
-      setIsCreating(false)
-    }
-  }
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    handleCreate()
+    const nextUrl = inputUrl.trim()
+    if (!nextUrl) return
+    const res = await runAction(actCreateReadLaterItem({ url: nextUrl }), {
+      onOk: (data) => {
+        const okMsg =
+          data.mode === 'ai'
+            ? '已加入稍后阅读，并生成文章摘要'
+            : data.mode === 'html'
+              ? '已加入稍后阅读，已从网页提取标题和摘要'
+              : '已加入稍后阅读，暂未获取到网页内容'
+        addToast({
+          color: 'success',
+          title: '操作成功',
+          description: okMsg,
+        })
+      },
+    })
+    if (!res.ok) return
+    setState((prev) => ({
+      unreadItems: [res.data.item, ...prev.unreadItems],
+    }))
+    setInputUrl('')
+    setActiveStatus('unread')
   }
 
   async function handleMarkRead(item: ReadLaterItem) {
@@ -182,30 +168,23 @@ export default function ClientPage(props: ClientPageProps) {
                 </p>
               </div>
 
-              <form className="flex w-full gap-2 lg:max-w-xl" onSubmit={handleSubmit}>
+              <form className="flex w-full gap-2 lg:max-w-xl" onSubmit={(e) => { e.preventDefault(); handleCreate() }}>
                 <input
                   aria-label="稍后阅读 URL"
                   placeholder="https://example.com/article"
-                  ref={inputRef}
-                  className="border-divider/70 h-10 min-w-0 flex-1 rounded-xl border bg-white/70 px-3 text-sm outline-hidden transition focus:border-sky-500/50 focus:ring-2 focus:ring-sky-500/20 dark:bg-white/[0.06]"
+                  value={inputUrl}
+                  onChange={(e) => setInputUrl(e.target.value)}
+                  className="border-divider/70 h-10 min-w-0 flex-1 rounded-xl border bg-white/70 px-3 text-sm outline-hidden transition focus:border-sky-500/50 focus:ring-2 focus:ring-sky-500/20 dark:bg-white/6"
                 />
                 <ReButton
                   type="button"
-                  isDisabled={isCreating}
-                  isIconOnly={isCreating}
+                  isDisabled={!inputUrl.trim()}
                   color="primary"
                   onPress={handleCreate}
-                  aria-label={isCreating ? '正在添加' : undefined}
-                  className={cn('h-10 shrink-0 rounded-xl', isCreating ? 'min-w-10' : 'px-5')}
+                  className="h-10 shrink-0 rounded-xl px-5"
                 >
-                  {isCreating ? (
-                    <span className={cn(IconNames.Tabler.LOADER_2, 'animate-spin text-base')} />
-                  ) : (
-                    <>
-                      <span className={IconNames.Tabler.PLUS} />
-                      <span>添加</span>
-                    </>
-                  )}
+                  <span className={IconNames.Tabler.PLUS} />
+                  <span>添加</span>
                 </ReButton>
               </form>
             </div>
@@ -226,8 +205,8 @@ export default function ClientPage(props: ClientPageProps) {
               className={cn(
                 'flex h-9 cursor-pointer items-center gap-2 rounded-xl px-4 text-sm transition-colors',
                 activeStatus === item.key
-                  ? 'bg-slate-950 text-white hover:bg-slate-900 dark:bg-white dark:text-black dark:hover:bg-white/90'
-                  : 'text-foreground-600 hover:bg-slate-100/80 hover:text-slate-950 dark:text-white/70 dark:hover:bg-white/[0.08] dark:hover:text-white'
+                  ? 'bg-foreground text-background hover:bg-foreground/90'
+                  : 'text-default-600 hover:bg-default-100/80 hover:text-foreground dark:hover:bg-white/8'
               )}
             >
               {item.label}
@@ -300,7 +279,7 @@ function ReadLaterCard(props: {
   return (
     <Card
       shadow="none"
-      className="group/read-later-card border border-divider/60 bg-white/38 backdrop-blur-2xl transition hover:bg-white/48 dark:bg-white/[0.055] dark:hover:bg-white/[0.075]"
+      className="group/read-later-card border border-divider bg-white/38 backdrop-blur-2xl transition hover:bg-white/48 dark:bg-white/5.5 dark:hover:bg-white/7.5"
     >
       <CardBody className="p-4 sm:p-5">
         <div className="flex min-w-0 gap-3.5">
@@ -440,7 +419,6 @@ function ReadLaterEditButton(props: {
   onSaved: (item: ReadLaterItem) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
   const [form, setForm] = useState({
     icon: props.item.icon || '',
     title: props.item.title,
@@ -457,24 +435,18 @@ function ReadLaterEditButton(props: {
   }, [isOpen, props.item.icon, props.item.summary, props.item.title])
 
   async function handleSave() {
-    if (isSaving) return
-    setIsSaving(true)
-    try {
-      const res = await runAction(
-        actUpdateReadLaterItem({
-          id: props.item.id,
-          icon: form.icon,
-          title: form.title,
-          summary: form.summary,
-        }),
-        { okMsg: '已更新稍后阅读内容' }
-      )
-      if (!res.ok) return
-      props.onSaved(res.data)
-      setIsOpen(false)
-    } finally {
-      setIsSaving(false)
-    }
+    const res = await runAction(
+      actUpdateReadLaterItem({
+        id: props.item.id,
+        icon: form.icon,
+        title: form.title,
+        summary: form.summary,
+      }),
+      { okMsg: '已更新稍后阅读内容' }
+    )
+    if (!res.ok) return
+    props.onSaved(res.data)
+    setIsOpen(false)
   }
 
   return (
@@ -495,13 +467,13 @@ function ReadLaterEditButton(props: {
           <ModalHeader>编辑稍后阅读</ModalHeader>
           <ModalBody>
             <div className="grid gap-4">
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <ReadLaterFavicon
                   key={`${props.item.id}-${form.icon || props.item.icon || ''}`}
                   host={getArticleHost(props.item.url)}
                   icon={form.icon || props.item.icon}
                 />
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="text-default-500 text-xs">当前链接</div>
                   <div className="text-default-700 truncate text-sm dark:text-white/70">
                     {props.item.url}
@@ -546,7 +518,7 @@ function ReadLaterEditButton(props: {
             <Button variant="light" onPress={() => setIsOpen(false)}>
               取消
             </Button>
-            <ReButton color="primary" onPress={handleSave} isLoading={isSaving}>
+            <ReButton color="primary" onPress={handleSave}>
               保存
             </ReButton>
           </ModalFooter>

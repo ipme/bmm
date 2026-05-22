@@ -45,7 +45,7 @@ async function doFetch(config: FetchRequestConfig): Promise<FetchResponse> {
     status: response.status,
     headers: Object.fromEntries(response.headers),
     body: Buffer.from(await response.arrayBuffer()),
-    effectiveUrl: response.url,
+    effectiveUrl: config.proxyUrl ? config.url : response.url,
   }
 }
 

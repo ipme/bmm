@@ -261,7 +261,7 @@ export default function BookmarkListPage(props: BookmarkListPageProps) {
   const isAllSelected = state.selectedKeys === 'all'
   const selectedIds = isAllSelected
     ? bookmarks.map((bookmark) => bookmark.id)
-    : ([...state.selectedKeys] as BookmarkId[])
+    : ([...state.selectedKeys].map(Number) as BookmarkId[])
   const hasSelection = isAllSelected || selectedIds.length > 0
 
   async function onBatchDelete() {

@@ -63,7 +63,7 @@ export function PublicAndUserNavbar(props: Props) {
           href={homeHref}
           className="group flex min-w-0 shrink-0 items-center gap-2.5 rounded-2xl px-1 py-1.5 no-underline sm:gap-3"
         >
-          <div className="relative flex size-10 shrink-0 items-center justify-center rounded-[20px] border border-slate-200/85 bg-gradient-to-br from-white/62 via-white/52 to-slate-100/80 backdrop-blur-md transition-[background-color,transform] duration-150 group-hover:bg-white/72 sm:size-11 sm:rounded-2xl dark:border-white/10 dark:from-white/12 dark:via-white/8 dark:to-white/4 dark:group-hover:bg-white/8">
+          <div className="relative flex size-10 shrink-0 items-center justify-center rounded-[20px] border border-slate-200/65 bg-white/34 backdrop-blur-md transition-[background-color,transform] duration-150 group-hover:bg-white/48 sm:size-11 sm:rounded-2xl dark:border-white/10 dark:bg-white/6 dark:group-hover:bg-white/10">
             <Image src={Assets.LOGO_SVG} width={24} height={24} alt="logo" priority />
           </div>
           <h3 className="text-foreground max-xs:hidden translate-y-0.5 truncate text-lg font-semibold tracking-tight sm:text-xl">

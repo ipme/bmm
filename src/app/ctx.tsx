@@ -69,7 +69,12 @@ export function GlobalProvider(props: PropsWithChildren<Props>) {
           toastOffset={20}
           toastProps={{ timeout: 3000, radius: 'lg' }}
         />
-        <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme={forceTheme}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          forcedTheme={forceTheme}
+        >
           <AntdConfigProviderWrapper>
             <SessionProvider session={props.session}>{props.children}</SessionProvider>
           </AntdConfigProviderWrapper>
